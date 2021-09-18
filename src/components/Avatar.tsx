@@ -2,18 +2,13 @@ import React from "react";
 import styled from "styled-components";
 
 interface AvatarProps {
-  image?: string;
-  name?: string;
+  image: string;
+  name: string;
 }
-const Avatar: React.FC<AvatarProps> = ({ image, name = "test" }) => {
+const Avatar: React.FC<AvatarProps> = ({ image, name }) => {
   return (
     <Conatiner>
-      <Img
-        alt="avatar"
-        src="https://angular-test-backend-yc4c5cvnnq-an.a.run.app/Russell.png"
-        width="48px"
-        height="48px"
-      />
+      <Img alt="avatar" src={image} width="48px" height="48px" />
       <Name>{name}</Name>
     </Conatiner>
   );
@@ -22,7 +17,7 @@ const Avatar: React.FC<AvatarProps> = ({ image, name = "test" }) => {
 const Conatiner = styled.div`
   display: flex;
   flex-direction: column;
-  margin-right: 20px;
+  margin-right: 10px;
   align-items: center;
 `;
 
