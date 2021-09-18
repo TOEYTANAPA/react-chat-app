@@ -1,12 +1,6 @@
 import "./App.css";
 import ChatContextProvider from "./contexts/ChatContext";
-import {
-  ApolloClient,
-  InMemoryCache,
-  ApolloProvider,
-  useQuery,
-  gql,
-} from "@apollo/client";
+import { ApolloProvider } from "@apollo/client";
 import Layout from "./components/Layout";
 import client from "./services/apollo";
 

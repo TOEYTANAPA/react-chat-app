@@ -2,7 +2,6 @@ import { useState, useContext, useEffect } from "react";
 import { IoIosSend } from "react-icons/io";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
-
 import {
   Container,
   Header,
@@ -16,7 +15,7 @@ import {
   ChatTime,
   ChatText,
 } from "./styles";
-import { gql, useQuery, useMutation } from "@apollo/client";
+import { gql, useMutation } from "@apollo/client";
 import useChat from "../services/chat-hook";
 import Avatar from "../components/Avatar";
 import Button from "../components/Button";
@@ -24,7 +23,7 @@ import { AVATAR_MAP, ROOM_MAP } from "../global/consts";
 import { ChatContext } from "../contexts/ChatContext";
 import { getTimeFormat } from "../utils/formatDate";
 
-type Messages = {
+type Message = {
   messageId?: string;
   text: string;
   datetime: string;
@@ -32,10 +31,10 @@ type Messages = {
 };
 
 interface NewType {
-  postMessage: Messages;
+  postMessage: Message;
 }
 interface IMessages {
-  messageId?: string;
+  messageId: string;
   text: string;
   datetime: string;
   userId: "Joyse" | "Sam" | "Russell";
@@ -49,10 +48,10 @@ interface ISendMessage {
 }
 
 const ChatPage = () => {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(localStorage.getItem("text") || "");
   const { getMessages, getMoreMessages } = useChat();
   const [lastMessages, setLastMessages] = useState<ISendMessage[]>([]);
-  const [msgs, setMsgs] = useState<any>();
+  const [msgs, setMsgs] = useState<IMessages[]>([]);
   const { userId, room } = useContext(ChatContext);
 
   const fetchLatestMessages = async () => {
@@ -75,16 +74,14 @@ const ChatPage = () => {
     }
     `;
 
-  const [
-    sendMessage,
-    { data: sentMessage, loading: sendLoading, error: sendError },
-  ] = useMutation<NewType>(SEND_MESSAGES, {
+  const [sendMessage] = useMutation<NewType>(SEND_MESSAGES, {
     onError: (err) => {
       setMessagesError(true);
     },
-    onCompleted: async (resp) => {
+    onCompleted: async () => {
       fetchLatestMessages();
       setText("");
+      localStorage.clear();
     },
   });
 
@@ -106,10 +103,12 @@ const ChatPage = () => {
       },
     ]);
     setText("");
+    localStorage.clear();
   };
 
   const handleOnChange = (e: any) => {
     setText(e.target.value);
+    localStorage.setItem("text", e.target.value);
   };
 
   const handleReadMore = async (old: boolean) => {
@@ -152,16 +151,22 @@ const ChatPage = () => {
                 </List>
               ))}
 
-            {lastMessages?.map((item, index) => (
-              <List sender key={index}>
-                <Avatar name={item.userId} image={AVATAR_MAP[item.userId]} />
-                <ChatText>{item.text}</ChatText>
-                <Icon error={item.error ? true : false}>
-                  {item.error ? <FaExclamationCircle /> : <FaCheckCircle />}
-                </Icon>
-                <ChatTime>{item.datetime}</ChatTime>
-              </List>
-            ))}
+            {lastMessages?.map((item, index) =>
+              userId === item.userId ? (
+                <List sender={userId === item.userId} key={index}>
+                  <Avatar name={item.userId} image={AVATAR_MAP[item.userId]} />
+                  <ChatText>{item.text}</ChatText>
+                  {userId === item.userId && (
+                    <Icon error={item.error ? true : false}>
+                      {item.error ? <FaExclamationCircle /> : <FaCheckCircle />}
+                    </Icon>
+                  )}
+                  <ChatTime>{item.datetime}</ChatTime>
+                </List>
+              ) : (
+                <></>
+              )
+            )}
           </Messages>
           <Button
             text="Read More"
