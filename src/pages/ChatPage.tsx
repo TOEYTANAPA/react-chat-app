@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import { IoIosSend } from "react-icons/io";
+import { FaArrowUp, FaArrowDown } from "react-icons/fa";
+import { FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 
 import {
   Container,
@@ -9,38 +11,163 @@ import {
   ChatBox,
   TextArea,
   Messages,
+  Icon,
   List,
   ChatTime,
   ChatText,
 } from "./styles";
+import { gql, useQuery, useMutation } from "@apollo/client";
+import useChat from "../services/chat-hook";
 import Avatar from "../components/Avatar";
 import Button from "../components/Button";
+import { AVATAR_MAP, ROOM_MAP } from "../global/consts";
+import { ChatContext } from "../contexts/ChatContext";
+import { getTimeFormat } from "../utils/formatDate";
+
+type Messages = {
+  messageId?: string;
+  text: string;
+  datetime: string;
+  userId: "Joyse" | "Sam" | "Russell";
+};
+
+interface NewType {
+  postMessage: Messages;
+}
+interface IMessages {
+  messageId?: string;
+  text: string;
+  datetime: string;
+  userId: "Joyse" | "Sam" | "Russell";
+}
+
+interface ISendMessage {
+  userId: "Joyse" | "Sam" | "Russell";
+  text: string;
+  datetime: string;
+  error: boolean;
+}
 
 const ChatPage = () => {
   const [text, setText] = useState("");
-  const handleSubmit = () => {};
+  const { getMessages, getMoreMessages } = useChat();
+  const [lastMessages, setLastMessages] = useState<ISendMessage[]>([]);
+  const [msgs, setMsgs] = useState<any>();
+  const { userId, room } = useContext(ChatContext);
+
+  const fetchLatestMessages = async () => {
+    const resp = await getMessages();
+    setMsgs(resp.fetchLatestMessages);
+  };
+
+  useEffect(() => {
+    fetchLatestMessages();
+  }, [room]);
+
+  const SEND_MESSAGES = gql`
+      mutation {
+      postMessage(channelId: "${room}",text: "${text}", userId: "${userId}"){
+        messageId
+        text
+        datetime
+        userId
+      }
+    }
+    `;
+
+  const [
+    sendMessage,
+    { data: sentMessage, loading: sendLoading, error: sendError },
+  ] = useMutation<NewType>(SEND_MESSAGES, {
+    onError: (err) => {
+      setMessagesError(true);
+    },
+    onCompleted: async (resp) => {
+      fetchLatestMessages();
+      setText("");
+    },
+  });
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    if (text) {
+      sendMessage();
+    }
+  };
+
+  const setMessagesError = (error: boolean, data?: IMessages) => {
+    setLastMessages([
+      ...lastMessages,
+      {
+        userId,
+        text: text,
+        datetime: getTimeFormat(),
+        error,
+      },
+    ]);
+    setText("");
+  };
 
   const handleOnChange = (e: any) => {
-    console.log(e.target.value);
     setText(e.target.value);
   };
+
+  const handleReadMore = async (old: boolean) => {
+    if (msgs) {
+      const resp = await getMoreMessages(
+        room,
+        old ? msgs[msgs.length - 1].messageId : msgs[0].messageId,
+        old
+      );
+      if (resp.fetchMoreMessages.length > 0) {
+        setMsgs(resp?.fetchMoreMessages);
+      }
+    }
+  };
+
   return (
     <Container>
-      <Header>ROOM</Header>
+      <Header>{ROOM_MAP[room]}</Header>
       <ChatConatiner>
         <ChatHistory>
+          <Button
+            text="Read More"
+            icon={<FaArrowUp />}
+            onClick={() => handleReadMore(true)}
+          />
           <Messages>
-            <List>
-              <Avatar name="test" image="test" />
-              <ChatText>test</ChatText>
-              <ChatTime>18:40</ChatTime>
-            </List>
-            <List>
-              <Avatar name="test" image="test" />
-              <ChatText>test</ChatText>
-              <ChatTime>18:40</ChatTime>
-            </List>
+            {msgs
+              ?.slice(0)
+              .reverse()
+              .map((item: IMessages) => (
+                <List key={item.messageId} sender={userId === item.userId}>
+                  <Avatar name={item.userId} image={AVATAR_MAP[item.userId]} />
+                  <ChatText>{item.text}</ChatText>
+                  {userId === item.userId && (
+                    <Icon error={false}>
+                      <FaCheckCircle />
+                    </Icon>
+                  )}
+                  <ChatTime>{getTimeFormat(item.datetime)}</ChatTime>
+                </List>
+              ))}
+
+            {lastMessages?.map((item, index) => (
+              <List sender key={index}>
+                <Avatar name={item.userId} image={AVATAR_MAP[item.userId]} />
+                <ChatText>{item.text}</ChatText>
+                <Icon error={item.error ? true : false}>
+                  {item.error ? <FaExclamationCircle /> : <FaCheckCircle />}
+                </Icon>
+                <ChatTime>{item.datetime}</ChatTime>
+              </List>
+            ))}
           </Messages>
+          <Button
+            text="Read More"
+            icon={<FaArrowDown />}
+            onClick={() => handleReadMore(false)}
+          />
         </ChatHistory>
         <ChatBox>
           <form onSubmit={handleSubmit}>
