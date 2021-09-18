@@ -1,16 +1,16 @@
 import React from "react";
 import styled from "styled-components";
-import { IoIosSend } from "react-icons/io";
 
 interface ButtonProps {
   text: string;
   type?: "submit";
   icon?: React.ReactChild;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
-const Button: React.FC<ButtonProps> = ({ text, type, icon }) => {
+const Button: React.FC<ButtonProps> = ({ text, type, icon, onClick }) => {
   return (
-    <Btn type={type}>
+    <Btn type={type} onClick={onClick}>
       {text} <Icon>{icon}</Icon>
     </Btn>
   );
