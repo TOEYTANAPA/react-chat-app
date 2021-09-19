@@ -49,8 +49,9 @@ export const ChatText = styled.div`
   font-weight: 300;
   line-height: 150%;
   position: relative;
-  height: 53px;
   margin: 0 10px;
+  max-width: 200px;
+  word-wrap: break-word;
 
   &:before {
     content: "";
