@@ -9,7 +9,7 @@ This project is already deployed on Firebase
 
 url : https://chat-app-11fb5.web.app
 ## Starting the Project
-
+git checkout branch main then following these step:
 1. ### `npm install`
 2. ### `npm start`
 
