@@ -1,11 +1,9 @@
-import { ApolloError } from "@apollo/client";
 import styled from "styled-components";
 
 export const Container = styled.div`
   background-color: #f4f5fb;
   display: flex;
   height: 100vh;
-
   flex-direction: column;
 `;
 

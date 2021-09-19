@@ -1,23 +1,19 @@
 import { useState, createContext } from "react";
 
 type Setting = {
-  name: string;
-  room: string;
+  userId: "Joyse" | "Sam" | "Russell";
+  room: "1" | "2" | "3";
 };
 
-const defaultSetting = {
-  name: "Joyse",
-  room: "General",
-};
 type ChatSettingType = {
-  name: string;
-  room: string;
+  userId: "Joyse" | "Sam" | "Russell";
+  room: "1" | "2" | "3";
   setSetting: (newSetting: Setting) => void;
 };
 
 const defaultChatSetting: ChatSettingType = {
-  name: "Joyse",
-  room: "General",
+  userId: "Joyse",
+  room: "1",
   setSetting: (newSetting: Setting) => {},
 };
 
@@ -28,13 +24,13 @@ interface Props {
 }
 
 const ChatContextProvider: React.FC<Props> = ({ children }) => {
-  const [chat, setChat] = useState(defaultSetting);
+  const [chat, setChat] = useState<Setting>({ userId: "Joyse", room: "1" });
 
   const setSetting = (newSetting: Setting) => setChat(newSetting);
 
   return (
     <ChatContext.Provider
-      value={{ name: chat.name, room: chat.room, setSetting }}
+      value={{ userId: chat.userId, room: chat.room, setSetting }}
     >
       {children}
     </ChatContext.Provider>

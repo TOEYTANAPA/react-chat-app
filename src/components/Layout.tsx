@@ -2,23 +2,16 @@ import React, { useContext } from "react";
 import { ChatContext } from "../contexts/ChatContext";
 import styled from "styled-components";
 import ChatPage from "../pages/ChatPage";
-
-const CHAT_ROOM = [
-  { title: "General", link: "" },
-  { title: "Technology", link: "" },
-  { title: "LGTM", link: "" },
-];
-
-const USERS = ["Joyse", "Sam", "Russel"];
+import { CHAT_ROOM, USERS } from "../global/consts";
 
 const Layout = () => {
-  const { name, room, setSetting } = useContext(ChatContext);
+  const { userId, room, setSetting } = useContext(ChatContext);
   const handleOnSelectedName = (e: any) => {
-    setSetting({ room, name: e.target.value });
+    setSetting({ room, userId: e.target.value });
   };
 
   const handleOnSelectedRoom = (data: any) => {
-    setSetting({ name, room: data });
+    setSetting({ userId, room: data });
   };
 
   return (
@@ -26,10 +19,7 @@ const Layout = () => {
       <MenuBar>
         <SubMenu>
           <Title htmlFor="select1">1. Choose your user</Title>
-          <Select
-            //   value={this.state.value}
-            onChange={(e) => handleOnSelectedName(e)}
-          >
+          <Select onChange={(e) => handleOnSelectedName(e)}>
             {USERS.map((user, index) => (
               <option value={user} selected={index === 0} key={index}>
                 {user}
@@ -42,7 +32,7 @@ const Layout = () => {
           <Ulist>
             {CHAT_ROOM.map((item, index) => (
               <Items key={index}>
-                <Link onClick={() => handleOnSelectedRoom(item.title)}>
+                <Link onClick={() => handleOnSelectedRoom(item.id)}>
                   <P>{item.title}</P>
                 </Link>
               </Items>
