@@ -22,6 +22,7 @@ import Button from "../components/Button";
 import { AVATAR_MAP, ROOM_MAP } from "../global/consts";
 import { ChatContext } from "../contexts/ChatContext";
 import { getTimeFormat } from "../utils/formatDate";
+import { handleNewMsg } from "./utils";
 
 type Message = {
   messageId?: string;
@@ -30,7 +31,7 @@ type Message = {
   userId: "Joyse" | "Sam" | "Russell";
 };
 
-interface NewType {
+interface IPostMessage {
   postMessage: Message;
 }
 interface IMessages {
@@ -74,7 +75,7 @@ const ChatPage = () => {
     }
     `;
 
-  const [sendMessage] = useMutation<NewType>(SEND_MESSAGES, {
+  const [sendMessage] = useMutation<IPostMessage>(SEND_MESSAGES, {
     onError: (err) => {
       setMessagesError(true);
     },
@@ -111,6 +112,13 @@ const ChatPage = () => {
     localStorage.setItem("text", e.target.value);
   };
 
+  //Prevent pressing enter
+  const onKeyDown = (e: any) => {
+    if ((e.charCode || e.keyCode) === 13) {
+      e.preventDefault();
+    }
+  };
+
   const handleReadMore = async (old: boolean) => {
     if (msgs) {
       const resp = await getMoreMessages(
@@ -118,8 +126,8 @@ const ChatPage = () => {
         old ? msgs[msgs.length - 1].messageId : msgs[0].messageId,
         old
       );
-      if (resp.fetchMoreMessages.length > 0) {
-        setMsgs(resp?.fetchMoreMessages);
+      if (resp?.fetchMoreMessages?.length > 0) {
+        setMsgs(handleNewMsg(msgs, resp.fetchMoreMessages, old));
       }
     }
   };
@@ -151,21 +159,27 @@ const ChatPage = () => {
                 </List>
               ))}
 
-            {lastMessages?.map((item, index) =>
-              userId === item.userId ? (
-                <List sender={userId === item.userId} key={index}>
-                  <Avatar name={item.userId} image={AVATAR_MAP[item.userId]} />
-                  <ChatText>{item.text}</ChatText>
-                  {userId === item.userId && (
-                    <Icon error={item.error ? true : false}>
-                      {item.error ? <FaExclamationCircle /> : <FaCheckCircle />}
-                    </Icon>
-                  )}
-                  <ChatTime>{item.datetime}</ChatTime>
-                </List>
-              ) : (
-                <></>
-              )
+            {lastMessages?.map(
+              (item, index) =>
+                userId === item.userId && (
+                  <List sender={userId === item.userId} key={index}>
+                    <Avatar
+                      name={item.userId}
+                      image={AVATAR_MAP[item.userId]}
+                    />
+                    <ChatText>{item.text}</ChatText>
+                    {userId === item.userId && (
+                      <Icon error={item.error ? true : false}>
+                        {item.error ? (
+                          <FaExclamationCircle />
+                        ) : (
+                          <FaCheckCircle />
+                        )}
+                      </Icon>
+                    )}
+                    <ChatTime>{item.datetime}</ChatTime>
+                  </List>
+                )
             )}
           </Messages>
           <Button
@@ -176,7 +190,14 @@ const ChatPage = () => {
         </ChatHistory>
         <ChatBox>
           <form onSubmit={handleSubmit}>
-            <TextArea value={text} onChange={handleOnChange} />
+            <TextArea
+              value={text}
+              name="pad"
+              placeholder="Type your message here..."
+              onChange={handleOnChange}
+              onKeyDown={onKeyDown}
+            />
+
             <Button type="submit" text="Submit" icon={<IoIosSend />} />
           </form>
         </ChatBox>

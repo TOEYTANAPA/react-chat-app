@@ -8,6 +8,8 @@ export const CHAT_ROOM = [
   { title: "LGTM", id: "3" },
 ];
 
+export const MAX_MESSAGE = 10;
+
 export const ROOM_MAP = {
   "1": "General",
   "2": "Technology",
