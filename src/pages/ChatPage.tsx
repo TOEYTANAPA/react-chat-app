@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { IoIosSend } from "react-icons/io";
+import { gql, useMutation } from "@apollo/client";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
-import { FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import {
   Container,
   Header,
@@ -10,19 +10,14 @@ import {
   ChatBox,
   TextArea,
   Messages,
-  Icon,
-  List,
-  ChatTime,
-  ChatText,
 } from "./styles";
-import { gql, useMutation } from "@apollo/client";
 import useChat from "../services/chat-hook";
-import Avatar from "../components/Avatar";
 import Button from "../components/Button";
-import { AVATAR_MAP, ROOM_MAP } from "../global/consts";
+import { ROOM_MAP } from "../global/consts";
 import { ChatContext } from "../contexts/ChatContext";
 import { getTimeFormat } from "../utils/formatDate";
 import { handleNewMsg } from "./utils";
+import ChatComponent from "./ChatBox";
 
 type Message = {
   messageId?: string;
@@ -34,18 +29,18 @@ type Message = {
 interface IPostMessage {
   postMessage: Message;
 }
-interface IMessages {
+export interface IMessages {
   messageId: string;
   text: string;
   datetime: string;
   userId: "Joyse" | "Sam" | "Russell";
 }
 
-interface ISendMessage {
+export interface ISendMessage {
   userId: "Joyse" | "Sam" | "Russell";
   text: string;
   datetime: string;
-  error: boolean;
+  error?: boolean;
 }
 
 const ChatPage = () => {
@@ -99,7 +94,7 @@ const ChatPage = () => {
       {
         userId,
         text: text,
-        datetime: getTimeFormat(),
+        datetime: `${new Date()}`,
         error,
       },
     ]);
@@ -112,7 +107,7 @@ const ChatPage = () => {
     localStorage.setItem("text", e.target.value);
   };
 
-  //Prevent pressing enter
+  //Prevent pressing enter avoiding white screen bug
   const onKeyDown = (e: any) => {
     if ((e.charCode || e.keyCode) === 13) {
       e.preventDefault();
@@ -147,38 +142,17 @@ const ChatPage = () => {
               ?.slice(0)
               .reverse()
               .map((item: IMessages) => (
-                <List key={item.messageId} sender={userId === item.userId}>
-                  <Avatar name={item.userId} image={AVATAR_MAP[item.userId]} />
-                  <ChatText>{item.text}</ChatText>
-                  {userId === item.userId && (
-                    <Icon error={false}>
-                      <FaCheckCircle />
-                    </Icon>
-                  )}
-                  <ChatTime>{getTimeFormat(item.datetime)}</ChatTime>
-                </List>
+                <ChatComponent
+                  key={item.messageId}
+                  item={item}
+                  userId={userId}
+                />
               ))}
 
             {lastMessages?.map(
               (item, index) =>
                 userId === item.userId && (
-                  <List sender={userId === item.userId} key={index}>
-                    <Avatar
-                      name={item.userId}
-                      image={AVATAR_MAP[item.userId]}
-                    />
-                    <ChatText>{item.text}</ChatText>
-                    {userId === item.userId && (
-                      <Icon error={item.error ? true : false}>
-                        {item.error ? (
-                          <FaExclamationCircle />
-                        ) : (
-                          <FaCheckCircle />
-                        )}
-                      </Icon>
-                    )}
-                    <ChatTime>{item.datetime}</ChatTime>
-                  </List>
+                  <ChatComponent key={index} item={item} userId={userId} />
                 )
             )}
           </Messages>
@@ -192,7 +166,7 @@ const ChatPage = () => {
           <form onSubmit={handleSubmit}>
             <TextArea
               value={text}
-              name="pad"
+              name="chat"
               placeholder="Type your message here..."
               onChange={handleOnChange}
               onKeyDown={onKeyDown}
